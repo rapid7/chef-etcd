@@ -1,0 +1,35 @@
+{
+  "variables": {
+    "BASEAMI": "",
+    "BASEAMI_HVM": "",
+    "SERVICE_NAME": "cookbook",
+    "SERVICE_DESCRIPTION": "Rapid7 Cookbook",
+    "VERSION": "",
+    "BUILD_DATE": "",
+    "BUILD_URL": ""
+  },
+  "builders": [{
+    "type": "amazon-chroot",
+    "ami_name": "{{user `SERVICE_NAME`}}-{{user `VERSION`}}-{{user `BUILD_DATE`}}",
+    "source_ami": "{{user `BASEAMI`}}",
+    "ami_description": "{{user `SERVICE_DESCRIPTION`}}",
+    "tags": {
+      "service": "{{user `SERVICE_NAME`}}",
+      "version": "{{user `VERSION`}}",
+      "build_date": "{{user `BUILD_DATE`}}",
+      "build_url": "{{user `BUILD_URL`}}"
+    }
+  }],
+  "provisioners": [{
+    "type": "shell",
+    "inline": "sudo mkdir /var/chef && sudo chown ubuntu:ubuntu /var/chef"
+  }, {
+    "type": "chef-solo",
+    "run_list": ["rapid7-logstash::bake"],
+    "cookbook_paths": ["./cookbooks"],
+    "data_bags_path": "./data_bags",
+    "environments_path": "./environments",
+    "chef_environment": "bakery",
+    "staging_directory": "/var/chef"
+  }]
+}

@@ -1,0 +1,16 @@
+#
+# Cookbook Name:: etcd
+# Template:: etcd.upstart.erb
+#
+author  "Rapid7 LLC <coreservices@rapid7.com>"
+description "etcd Database Service"
+
+setuid <%= @resource.user %>
+setgid <%= @resource.user %>
+
+start on (virtual-filesystems and net-device-up IFACE!=lo)
+stop on shutdown
+
+console log
+exec <%= @instance.srv_binary %>\
+  <%= @arguments.join("\\\n  ") %>

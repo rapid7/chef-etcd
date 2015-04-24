@@ -22,9 +22,9 @@ Install etcd from a compiled release, by default from coreos/etcd on GitHub.
 etcd_binary 'name' do
   version 'v2.0.10'       # Default set in node['etcd']['version'], currently 'v2.0.10'
   platform 'linux-amd64'  # Default set in node['etcd']['platform']
-  path '/opt'             # Install root. Unpacked into <path>/etcd-<version>-<platform>-<name>
-  srv_bin 'etcd'          # Name of etcd binary
-  ctl_bin 'etcdctl'       # Name of etcd control binary
+  path '/opt'             # Install root. Unpacked into <path>/etcd-<version>-<platform>
+  srv_bin 'etcd'          # Name of etcd binary in package
+  ctl_bin 'etcdctl'       # Name of etcd control binary in package
   bin_path '/usr/local/bin' # Path to link to binaries from. Set to nil or false to disable linking
   from :github            # Package source. Currently only :github is supported
   repository '/coreos/etcd' # GitHub repo to fetch release from. Default node['etcd']['bin_repository']
@@ -37,7 +37,6 @@ Fetch and build etcd from a git repository. This resource does not install golan
 ```
 etcd_source 'name' do
   version 'v2.0.10'       # Default set in node['etcd']['version'], currently 'v2.0.10'
-  platform 'linux-amd64'  # Default set in node['etcd']['platform']
   path '/opt'             # Install root. Unpacked into <path>/etcd-<version>-<platform>-<name>
   srv_bin 'etcd'          # Name of etcd binary
   ctl_bin 'etcdctl'       # Name of etcd control binary
@@ -53,9 +52,9 @@ The only required attributes in the following are `name_node` (name attribute) a
  * `*_port`, `*_listen`, and `*_host` attributes are used to simplify the composition of various `*-url` arguments. Arrays passed to these attributes will result in geometric compositions, including the `protocol` arrtibute in the respective argument: `-advertise-client-urls http://client_host[0]:client_port[0],http://client_host[0]:client_port[1],http://client_host[1]:client_port[0],...`
  * Static peers are added using the `peer(name, protocol, host, client_port, peer_port)` method. The node's `-initial-cluster` argument will be composed from a merge of `protocol`, `host`, and `peer_port` parameters as well as the nodes own 'peer_host:peer_port' set.
 
-The `discovery` attribute enabled different configuration arguments specific to the respecive clustering method. `:static`, `:etcd`, and `:dns` are features of etcd. The `:aws` discovery method is implemented by this cookbook. It uses the EC2 tags API to find peers for cluster bootstrapping.
+The `discovery` attribute enables different configuration arguments specific to the respecive clustering method. `:static`, `:etcd`, and `:dns` are features of etcd. The `:aws` discovery method is implemented by this cookbook. It uses the EC2 tags API to find peers for cluster bootstrapping.
 
-*NOTES on using the `:aws` discovery method:*
+**NOTES on using the `:aws` discovery method:**
  * The etcd node name will be forced to `node['ec2']['instance_id']` for consistancy. This allows nodes to build a cluster list without having to exchange additional data (e.g. via a special AWS tag).
  * EC2 nodes' `private_dns_name` parameters will be used for peer addresses. Default peer ports must be used. Peers must all be configured with the same transport protocol.
  * The `:aws` discovery method requires the `aws` cookbook. You must add it to your downstream dependencies and include the `aws::default` recipe before defining resources that use the `:aws` discovery method!

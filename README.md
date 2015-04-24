@@ -55,6 +55,12 @@ The only required attributes in the following are `name_node` (name attribute) a
 
 The `discovery` attribute enabled different configuration arguments specific to the respecive clustering method. `:static`, `:etcd`, and `:dns` are features of etcd. The `:aws` discovery method is implemented by this cookbook. It uses the EC2 tags API to find peers for cluster bootstrapping.
 
+*NOTES on using the `:aws` discovery method:*
+ * The etcd node name will be forced to `node['ec2']['instance_id']` for consistancy. This allows nodes to build a cluster list without having to exchange additional data (e.g. via a special AWS tag).
+ * EC2 nodes' `private_dns_name` parameters will be used for peer addresses. Default peer ports must be used. Peers must all be configured with the same transport protocol.
+ * The `:aws` discovery method requires the `aws` cookbook. You must add it to your downstream dependencies and include the `aws::default` recipe before defining resources that use the `:aws` discovery method!
+ * Due to the serial nature of Chef, multiple `etcd_service` resources should not be defined in the same run_list for the same cluster when using the `:aws` discovery method. One resource will block the Chef run until the desired quorum of peers is discovered. Note that the `:aws` method uses the same underlying configuration as the `:static` method. For simple testing scenarios, they should be functionally equivalent.
+
 ```
 etcd_service 'node_name' do
   node_name 'node0'       # Name attribute. etcd node name
@@ -90,7 +96,7 @@ etcd_service 'node_name' do
   proxy :off              # One of :on, :readonly, :off. See [Proxy Docs](https://github.com/coreos/etcd/blob/master/Documentation/proxy.md)
 
   ## SSL
-  protocol :http          # Listen protocol. One of :http, :https. Default :http
+  protocol :http          # Transport protocol. One of :http, :https. Default :http
 
   ## See [The Docs](https://github.com/coreos/etcd/blob/master/Documentation/configuration.md#security-flags)
   cert_file 'client-cert.pem'
@@ -112,7 +118,11 @@ etcd_service 'node_name' do
 
   discovery_service 'https://discovery.etcd.io/blahblahblah' # An etcd discovery node
   discovery_proxy 'proxy.domain.com' # HTTP(S) Proxy to etcd discovery servuce
-  discovery_domain 'domain.com' # Domain inwhich to query DNS SRV record _etcd._tcp.domain.com
+  discovery_domain 'domain.com' # Domain inwhich to query DNS SRV record etcd-server[-ssl]._tcp.domain.com
   discovery_fallback :exit # One of :exit, :proxy. See [Proxy Docs](https://github.com/coreos/etcd/blob/master/Documentation/proxy.md)
+
+  ## AWS Discovery parameters
+  aws_tags :Service => 'foo', :Cluster => 'production'
+  aws_quorum 3
 end
 ```

@@ -6,10 +6,17 @@ class Chef
     # An installation of etcd from source
     ##
     class EtcdSource < Etcd
-      provides :etcd_source
-      self.resource_name = :etcd_source
+      def initialize(name, run_context = nil)
+        super
 
-      attribute :url, :kind_of => String, :default => node['etcd']['source_repository']
+        @provider = Chef::Provider::EtcdSource
+        @resource_name = :etcd_source
+      end
+
+      def url(arg = nil)
+        set_or_return(:url, arg, :kind_of => String,
+                                 :default => node['etcd']['source_repository'])
+      end
 
       def srv_binary
         ::File.join(cannonical_path, 'bin', srv_bin)

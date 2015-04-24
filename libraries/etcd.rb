@@ -4,33 +4,50 @@ class Chef
     ##
     # Base resource for a installation of etcd
     ##
-    class Etcd < Resource::LWRPBase
+    class Etcd < Chef::Resource
       identity_attr :name
 
-      actions :install
-      default_action :install
+      def initialize(name, run_context = nil)
+        super
 
-      attribute :version, :kind_of => String,
-                          :default => node['etcd']['version']
-      attribute :platform, :kind_of => String,
-                           :default => node['etcd']['platform']
-      attribute :path, :kind_of => String, :default => '/opt'
+        ## Actions
+        @action = :install
+        @allowed_actions << :install
+      end
 
-      attribute :srv_bin, :kind_of => String, :default => 'etcd'
-      attribute :ctl_bin, :kind_of => String, :default => 'etcdctl'
-      attribute :bin_path, :kind_of => [String, NilCalss, FalseClass],
-                           :default => '/usr/local/bin'
+      def version(arg = nil)
+        set_or_return(:version, arg, :kind_of => String,
+                                     :default => node['etcd']['version'])
+      end
+
+      def platform(arg = nil)
+        set_or_return(:platform, arg, :kind_of => String,
+                                      :default => node['etcd']['platform'])
+      end
+
+      def path(arg = nil)
+        set_or_return(:path, arg, :kind_of => String, :default => '/opt')
+      end
+
+      def srv_bin(arg = nil)
+        set_or_return(:srv_bin, arg, :kind_of => String, :default => 'etcd')
+      end
+
+      def ctl_bin(arg = nil)
+        set_or_return(:ctl_bin, arg, :kind_of => String, :default => 'etcdctl')
+      end
+
+      def bin_path(arg = nil)
+        set_or_return(:bin_path, arg, :kind_of => [String, NilClass, FalseClass],
+                                      :default => '/usr/local/bin')
+      end
 
       def package_name
         "etcd-#{ version }-#{ platform }"
       end
 
-      def cannonical_name
-        "#{ package_name }-#{ name }"
-      end
-
       def cannonical_path
-        ::File.join(path, cannonical_name)
+        ::File.join(path, package_name)
       end
 
       def srv_binary

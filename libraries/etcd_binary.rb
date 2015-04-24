@@ -6,17 +6,26 @@ class Chef
     # An installation of etcd from a compiled release
     ##
     class EtcdBinary < Etcd
-      provides :etcd_binary
-      self.resource_name = :etcd_binary
+      def initialize(name, run_context = nil)
+        super
 
+        @provider = Chef::Provider::EtcdBinary
+        @resource_name = :etcd_binary
+      end
 
-      attribute :from, :kind_of => Symbol,
-                       :equal_to => [:github],
-                       :default => :github
-      attribute :repository, :kind_of => String, :default => node['etcd']['bin_repository']
+      def from(arg = nil)
+        set_or_return(:from, arg, :kind_of => Symbol,
+                                  :equal_to => [:github],
+                                  :default => :github)
+      end
+
+      def repository(arg = nil)
+        set_or_return(:repository, arg, :kind_of => String,
+                                        :default => node['etcd']['bin_repository'])
+      end
 
       def package_cache
-        ::File.join(Chef::Config[:file_cache_path], "#{ cannonical_name }.tgz")
+        ::File.join(Chef::Config[:file_cache_path], "#{ package_name }-#{ name }.tgz")
       end
 
       def github_artifact

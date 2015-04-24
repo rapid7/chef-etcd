@@ -16,8 +16,8 @@ etcd_service 'node0' do
   client_port 2379
   peer_port 2380
 
-  peer 'node1', :http, node['ipaddress'], 2382, 2381
-  peer 'node2', :http, node['ipaddress'], 2384, 2383
+  peer 'node1', :http, node['ipaddress'], 2381, 2382
+  peer 'node2', :http, node['ipaddress'], 2383, 2384
 
   data_dir '/var/data/etcd-node0'
 end
@@ -27,8 +27,8 @@ etcd_service 'node1' do
   client_port 2381
   peer_port 2382
 
-  peer 'node0', :http, node['ipaddress'], 2380, 2379
-  peer 'node2', :http, node['ipaddress'], 2384, 2383
+  peer 'node0', :http, node['ipaddress'], 2379, 2380
+  peer 'node2', :http, node['ipaddress'], 2383, 2384
 
   data_dir '/var/data/etcd-node1'
 end
@@ -38,8 +38,8 @@ etcd_service 'node2' do
   client_port 2383
   peer_port 2384
 
-  peer 'node1', :http, node['ipaddress'], 2382, 2381
-  peer 'node2', :http, node['ipaddress'], 2384, 2383
+  peer 'node1', :http, node['ipaddress'], 2381, 2382
+  peer 'node2', :http, node['ipaddress'], 2383, 2384
 
   data_dir '/var/data/etcd-node2'
 end

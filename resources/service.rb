@@ -14,7 +14,8 @@ def initialize(*_)
 end
 
 attribute :node_name, :name_attribute => true
-attribute :instance, :kind_of => [String, Hash, Resource::Etcd]
+attribute :instance, :kind_of => [String, Hash, Resource::Etcd],
+                     :required => true
 
 attribute :user, :kind_of => String, :default => 'etcd'
 attribute :group, :kind_of => String, :default => 'etcd'
@@ -43,9 +44,10 @@ attribute :proxy, :kind_of => Symbol,
                   :default => :off
 
 ## SSL
-attribute :protocol, :kind_of => [String, Symbol],
-                     :equal_to => [:http, 'http', :https, 'https'],
+attribute :protocol, :kind_of => Symbol,
+                     :equal_to => [:http, :https],
                      :default => :http
+
 attribute :cert_file, :kind_of => String
 attribute :key_file, :kind_of => String
 attribute :client_cert_auth, :kind_of => [TrueClass, FalseClass], :default => false
@@ -89,7 +91,7 @@ def http_class(pp = protocol)
 end
 
 ## Define a peer node
-def peer(name, protocol = :http, host = 'localhost', peer = 2380, client = 2379)
+def peer(name, protocol = :http, host = 'localhost', client = 2379, peer = 2380)
   peers[name] = {
     :client => uri_class(protocol).build(:host => host, :port => client),
     :peer => uri_class(protocol).build(:host => host, :port => peer)

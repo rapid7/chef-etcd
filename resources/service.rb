@@ -3,6 +3,9 @@ require 'net/http'
 require 'net/https'
 require 'uri'
 
+## For the lulz, or tags. Whatever...
+include Opscode::Aws::Ec2
+
 actions :configure
 default_action :configure
 
@@ -70,8 +73,11 @@ attribute :discovery_service, :kind_of => String
 attribute :discovery_domain, :kind_of => String
 attribute :discovery_fallback, :kind_of => Symbol,
                                :equal_to => [:exit, :proxy],
-                               :default => :exit
+                               :default => :proxy
 attribute :discovery_proxy, :kind_of => String
+
+attribute :aws_tags, :kind_of => Hash, :default => {}
+attribute :aws_quorum, :kind_of => Integer, :default => 3
 
 ## HTTP/HTTPS helpers
 def uri_class(pp = protocol)
@@ -98,17 +104,35 @@ def peer(name, protocol = :http, host = 'localhost', client = 2379, peer = 2380)
   }
 end
 
-def client
+## etcd API accessors
+def cluster_client
   peer = peers.values.firss[:client] ## Connect to a peer's API
   @etcd_client ||= http_class.new(peer.host, peer.port)
 end
 
-def members
+def cluster_members
   JSON.parse(client.get('/v2/members').body)
 end
 
-def join
+def cluster_join
   client.post('/v2/members', JSON.generate(:peerURLs => advertise_clients))
+end
+
+## Search for peers via the AWS/EC2 API
+def aws_find_peers
+  tags = aws_tags.map do |key, value|
+    {
+      :name => "tag:#{ key }",
+      :values => value.is_a?(Array) ? value : [value]
+    }
+  end
+
+  @peers = {}
+
+  ec2.describe_instances(:filters => tags).data.reservations
+    .map(&:instances).flatten.each do |instance|
+      peer(instance.instance_id, protocol, instance.private_dns_name, 2379, 2380)
+    end
 end
 
 ## Get Chef::Resource for etcd instnace
@@ -151,5 +175,5 @@ end
 
 def cluster_nodes
   (advertise_peers.map { |addr| "#{ node_name }=#{ addr }" } +
-   peers.map { |n, peer| "#{ n }=#{ peer[:peer] }" }).sort.join(',')
+   peers.map { |n, peer| "#{ n }=#{ peer[:peer] }" }).sort
 end

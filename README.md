@@ -90,7 +90,7 @@ etcd_service 'node_name' do
   client_listen '0.0.0.0' # One or more client bind addresses (String, Array). Default `0.0.0.0`
   client_port 2379        # One or more client listen ports (Integer, Array). Default 2379
   peer_host 'localhost'   # One or more advertised peer hosts. Default `node['ipaddress']`
-  peer_listen             # One or more peer bind addresses. Default `0.0.0.0`
+  peer_listen '0.0.0.0'   # One or more peer bind addresses. Default `0.0.0.0`
   peer_port 2380          # One or more peer listen ports. Default 2380
 
   ## See [The Docs](https://github.com/coreos/etcd/blob/master/Documentation/configuration.md#member-flags)

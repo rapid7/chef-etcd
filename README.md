@@ -12,6 +12,12 @@ The `etcd_service` resource allows multiple etcd processes to run on the same sy
 
 Similarly, the `etcd_binary` and `etcd_source` resources ensure that their respecitve installations are vendored so as to allow mutliple versions/builds of etcd to coexist on a single system. `etcd_service` resources each map to an installation, allowing you to test arbitrary compatability scenarios both within a cluster and with client libraries.
 
+## Recipes
+ * **etcd::aws** Create a simple cluster using the `:aws` discovery method
+ * **etcd::default** Install base dependencies. Must be included before using resources.
+ * **etcd::node** Create a standalone node
+ * **etcd::testing** Create a cluster of three nodes on the same host for testing
+
 ## Resources
 ### etcd_binary
 Install etcd from a compiled release, by default from coreos/etcd on GitHub.
@@ -46,18 +52,26 @@ end
 ```
 
 ### etcd_service
-Configure and run an installation (`etcd_binary` or `etcd_source`) as a service.
+Configure and run an installation (`etcd_binary` or `etcd_source`) as a service. The only required attributes in the following are `name_node` (name attribute) and `instance`. Other values have sane defaults for running a single node cluster.
 
-The only required attributes in the following are `name_node` (name attribute) and `instance`. Other values have sane defaults for running a single node cluster. While most configuration parameters are exposed directly, several abstractions are provided to capture some of the more confusing or repetitive parts of the etcd v2 configuration spec:
- * `*_port`, `*_listen`, and `*_host` attributes are used to simplify the composition of various `*-url` arguments. Arrays passed to these attributes will result in geometric compositions, including the `protocol` arrtibute in the respective argument: `-advertise-client-urls http://client_host[0]:client_port[0],http://client_host[0]:client_port[1],http://client_host[1]:client_port[0],...`
+While most configuration parameters are exposed directly, several abstractions are provided to capture some of the more confusing or repetitive parts of the etcd v2 configuration spec:
+ * `client_port`, `peer_port`, `client_listen`, `peer_listen`, `client_host`, and `peer_host` attributes are used to simplify the composition of various `*-url` arguments. Arrays passed to these attributes will result in geometric compositions, including the `protocol` arrtibute in the respective argument:
+
+```
+-advertise-client-urls\
+  http://client_host[0]:client_port[0],\
+  http://client_host[0]:client_port[1],
+  http://client_host[1]:client_port[0],\
+  ...
+```
+
  * Static peers are added using the `peer(name, protocol, host, client_port, peer_port)` method. The node's `-initial-cluster` argument will be composed from a merge of `protocol`, `host`, and `peer_port` parameters as well as the nodes own 'peer_host:peer_port' set.
 
 The `discovery` attribute enables different configuration arguments specific to the respecive clustering method. `:static`, `:etcd`, and `:dns` are features of etcd. The `:aws` discovery method is implemented by this cookbook. It uses the EC2 tags API to find peers for cluster bootstrapping.
 
-**NOTES on using the `:aws` discovery method:**
- * The etcd node name will be forced to `node['ec2']['instance_id']` for consistancy. This allows nodes to build a cluster list without having to exchange additional data (e.g. via a special AWS tag).
- * EC2 nodes' `private_dns_name` parameters will be used for peer addresses. Default peer ports must be used. Peers must all be configured with the same transport protocol.
- * The `:aws` discovery method requires the `aws` cookbook. You must add it to your downstream dependencies and include the `aws::default` recipe before defining resources that use the `:aws` discovery method!
+**NOTE** On using the `:aws` discovery method:
+ * The `:aws` discovery method requires the `aws` cookbook. You must add it to your downstream dependencies and include the `aws::default` recipe before defining resources that use the `:aws` discovery method! The `aws::ec2_hints` recipe may be necessary to coerce ohai into populating `node['ec2']`
+ * `node_name` will be set to `node['ec2']['instance_id']`. The same transport `protocol` and `peer_port` must be used across the cluster.
  * Due to the serial nature of Chef, multiple `etcd_service` resources should not be defined in the same run_list for the same cluster when using the `:aws` discovery method. One resource will block the Chef run until the desired quorum of peers is discovered. Note that the `:aws` method uses the same underlying configuration as the `:static` method. For simple testing scenarios, they should be functionally equivalent.
 
 ```
@@ -121,7 +135,8 @@ etcd_service 'node_name' do
   discovery_fallback :exit # One of :exit, :proxy. See [Proxy Docs](https://github.com/coreos/etcd/blob/master/Documentation/proxy.md)
 
   ## AWS Discovery parameters
-  aws_tags :Service => 'foo', :Cluster => 'production'
-  aws_quorum 3
+  aws_tags :service => 'foo', :cluster => 'production' # Tags used to discover peers
+  aws_quorum 3            # Resource will wait for a quorum to be available before configuring and starting etcd
+  aws_hostname_key :private_dns_name # AWS-SDK Instance key to be used as hostnames See [The Docs](http://docs.aws.amazon.com/sdkforruby/api/Aws/EC2/Instance.html)
 end
 ```

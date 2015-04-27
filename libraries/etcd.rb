@@ -1,4 +1,11 @@
-
+#
+# Cookbook Name:: rapid7-cookbook
+# Library:: etcd
+#
+# Copyright (C) 2015 Rapid7 LLC.
+#
+# All rights reserved - Do Not Redistribute
+#
 class Chef
   class Resource
     ##

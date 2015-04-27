@@ -1,3 +1,11 @@
+#
+# Cookbook Name:: rapid7-cookbook
+# Library:: etcd_binary
+#
+# Copyright (C) 2015 Rapid7 LLC.
+#
+# All rights reserved - Do Not Redistribute
+#
 require_relative './etcd'
 
 class Chef

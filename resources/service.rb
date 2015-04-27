@@ -78,7 +78,7 @@ attribute :aws_tags, :kind_of => Hash, :default => {
   :Cluster => node['etcd']['aws_cluster']
 }
 attribute :aws_quorum, :kind_of => Integer, :default => node['etcd']['aws_quorum']
-attribute :aws_hostname_key, :kind_of => Symbol, :default => :private_dns_name
+attribute :aws_host_attribute, :kind_of => Symbol, :default => :private_dns_name
 attribute :aws_access_key, :kind_of => String
 attribute :aws_secret_access_key, :kind_of => String
 

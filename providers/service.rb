@@ -34,7 +34,7 @@ def aws_find_peers
         "#{ new_resource.protocol }://#{ instance.private_dns_name }:#{ new_resource.peer_port }")
       new_resource.peer(instance.instance_id,
                         new_resource.protocol,
-                        instance[new_resource.aws_hostname_key],
+                        instance[new_resource.aws_host_attribute],
                         new_resource.client_port,
                         new_resource.peer_port)
     end

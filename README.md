@@ -93,7 +93,7 @@ etcd_service 'node_name' do
   peer_listen '0.0.0.0'   # One or more peer bind addresses. Default `0.0.0.0`
   peer_port 2380          # One or more peer listen ports. Default 2380
 
-  ## See [The Docs](https://github.com/coreos/etcd/blob/master/Documentation/configuration.md#member-flags)
+  ## See https://github.com/coreos/etcd/blob/master/Documentation/configuration.md#member-flags
   data_dir '/var/data/etcd'
   snapshot_count 10_000
   max_snapshots 5
@@ -102,12 +102,12 @@ etcd_service 'node_name' do
   election_timeout 1000
 
   cors 'allowed.domain.com' # CORS origins allowed by client API (String, Array).
-  proxy :off              # One of :on, :readonly, :off. See [Proxy Docs](https://github.com/coreos/etcd/blob/master/Documentation/proxy.md)
+  proxy :off              # One of :on, :readonly, :off. See https://github.com/coreos/etcd/blob/master/Documentation/proxy.md
 
   ## SSL
   protocol :http          # Transport protocol. One of :http, :https. Default :http
 
-  ## See [The Docs](https://github.com/coreos/etcd/blob/master/Documentation/configuration.md#security-flags)
+  ## See https://github.com/coreos/etcd/blob/master/Documentation/configuration.md#security-flags
   cert_file 'client-cert.pem'
   key_file 'client-key.pem'
   client_cert_auth true
@@ -117,7 +117,7 @@ etcd_service 'node_name' do
   peer_client_cert_auth true
   peer_trusted_ca_file 'peer-ca.pem'
 
-  ## Cluster configuration See [The Docs])https://github.com/coreos/etcd/blob/master/Documentation/configuration.md#clustering-flags for specifics
+  ## Cluster configuration See https://github.com/coreos/etcd/blob/master/Documentation/configuration.md#clustering-flags for specifics
   discovery :static       # One of :static, :etcd, :dns, :aws.
   state :new              # initial-cluster-state: One of :new, :existing. Default :new
   token 'etcd-cluster'    # initial-cluster-token: Default 'etcd-cluster'
@@ -128,7 +128,7 @@ etcd_service 'node_name' do
   discovery_service 'https://discovery.etcd.io/blahblahblah' # An etcd discovery node
   discovery_proxy 'proxy.domain.com' # HTTP(S) Proxy to etcd discovery servuce
   discovery_domain 'domain.com' # Domain inwhich to query DNS SRV record etcd-server[-ssl]._tcp.domain.com
-  discovery_fallback :exit # One of :exit, :proxy. See [Proxy Docs](https://github.com/coreos/etcd/blob/master/Documentation/proxy.md)
+  discovery_fallback :exit # One of :exit, :proxy. See https://github.com/coreos/etcd/blob/master/Documentation/proxy.md
 
   ## AWS Discovery parameters
   aws_tags :service => 'foo', :cluster => 'production' # Tags used to discover peers
@@ -151,3 +151,20 @@ end
    * ec2:DeleteTags
    * ec2:DescribeTags
    * ec2:DescribeInstances
+
+## Vagrant
+The included Vagrant file uses the `vagrant-secret` and `vagrant-aws` plugins. If you would like to provision EC2 nodes, install both plugins and create a secret.yaml file:
+
+```
+# Account-specific AWS configurations
+access_key_id: 'xxx'
+secret_access_key: 'xxx'
+keypair_name: 'xxx'
+
+subnet_id: 'subnet-xxx'
+security_groups:
+  - 'sg-xxx'
+
+iam_instance_profile_arn: 'arn:aws:iam::xxx:instance-profile/xxx'
+
+```

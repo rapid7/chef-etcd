@@ -119,6 +119,7 @@ etcd_service 'node_name' do
 
   ## Cluster configuration See https://github.com/coreos/etcd/blob/master/Documentation/configuration.md#clustering-flags for specifics
   discovery :static       # One of :static, :etcd, :dns, :aws.
+  quorum 3                # Resource will wait for a quorum to be available before configuring and starting etcd. Currently only used by `:aws` discovery
   state :new              # initial-cluster-state: One of :new, :existing. Default :new
   token 'etcd-cluster'    # initial-cluster-token: Default 'etcd-cluster'
 
@@ -132,7 +133,6 @@ etcd_service 'node_name' do
 
   ## AWS Discovery parameters
   aws_tags :service => 'foo', :cluster => 'production' # Tags used to discover peers
-  aws_quorum 3            # Resource will wait for a quorum to be available before configuring and starting etcd
   aws_host_attribute :private_dns_name # AWS-SDK Instance key to be used as hostnames See [The Docs](http://docs.aws.amazon.com/sdkforruby/api/Aws/EC2/Instance.html)
 
   ## AWS key attributes are provided for compatability with the Opscode AWS cookbook;
@@ -143,6 +143,8 @@ end
 ```
 
 ### Using the :aws discovery method
+The `:aws` discovery method uses AWS tags and etcd APIs to bootstrap a new cluster, join an exizting cluster, or fail back to a proxy node if a cluster of the desired size exists.
+
  * The `:aws` discovery method requires the `aws` cookbook. You must add it to your downstream dependencies and include the `aws::default` recipe before defining resources that use the `:aws` discovery method! The `aws::ec2_hints` recipe may be necessary to coerce ohai into populating `node['ec2']`
  * `node_name` will be set to `node['ec2']['instance_id']`. The same transport `protocol` and `peer_port` must be used across the cluster.
  * Due to the serial nature of Chef, multiple `etcd_service` resources should not be defined in the same run_list for the same cluster when using the `:aws` discovery method. One resource will block the Chef run until the desired quorum of peers is discovered. Note that the `:aws` method uses the same underlying configuration as the `:static` method. For simple testing scenarios, they should be functionally equivalent.
@@ -153,7 +155,7 @@ end
    * ec2:DescribeInstances
 
 ## Vagrant
-The included Vagrant file uses the `vagrant-secret` and `vagrant-aws` plugins. If you would like to provision EC2 nodes, install both plugins and create a secret.yaml file:
+The included Vagrant file uses the `vagrant-secret` and `vagrant-aws` plugins. If you would like to provision EC2 nodes, install both plugins and create a .vagrant/secret.yaml file. Run `vagrant secret-init` and edit the resulting file:
 
 ```
 # Account-specific AWS configurations
@@ -165,6 +167,6 @@ subnet_id: 'subnet-xxx'
 security_groups:
   - 'sg-xxx'
 
+# IAM Profile ARN. Associated role must have the actions, listed above, allowed.
 iam_instance_profile_arn: 'arn:aws:iam::xxx:instance-profile/xxx'
-
 ```

@@ -42,7 +42,10 @@ Vagrant.configure('2') do |config|
   config.vm.provision :chef_solo do |chef|
     # chef.log_level = :debug
     chef.json = {
-      :vagrant => true
+      :vagrant => true,
+      :etcd => {
+        :quorum => 3
+      }
     }
 
     chef.run_list = [
@@ -52,8 +55,8 @@ Vagrant.configure('2') do |config|
     ]
   end
 
-  ## Build a cluster
-  3.times do |i|
+  ## Build a cluster with some proxies
+  5.times do |i|
     config.vm.define "node-#{i}"
   end
 end

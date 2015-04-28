@@ -1,8 +1,29 @@
-require 'json'
-require 'net/http'
-require 'net/https'
-require 'uri'
-
+#
+# Cookbook Name:: etcd
+# Resource:: service
+#
+# The MIT License (MIT)
+# =====================
+# Copyright (C) 2015 Rapid7 LLC.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
 actions :configure
 default_action :configure
 
@@ -10,7 +31,8 @@ attr_accessor :peers
 
 def initialize(*_)
   super
-  @peers = {}
+
+  @peers = []
 end
 
 attribute :node_name, :name_attribute => true
@@ -77,48 +99,18 @@ attribute :aws_tags, :kind_of => Hash, :default => {
   :Service => 'etcd',
   :Cluster => node['etcd']['aws_cluster']
 }
-attribute :aws_quorum, :kind_of => Integer, :default => node['etcd']['aws_quorum']
+attribute :quorum, :kind_of => Integer, :default => node['etcd']['quorum']
 attribute :aws_host_attribute, :kind_of => Symbol, :default => :private_dns_name
 attribute :aws_access_key, :kind_of => String
 attribute :aws_secret_access_key, :kind_of => String
 
-## HTTP/HTTPS helpers
-def uri_class(pp = protocol)
-  case pp.to_sym
-  when :http then URI::HTTP
-  when :https then URI::HTTPS
-  else fail 'Peer protocol must be one of :http, :https'
-  end
-end
-
-def http_class(pp = protocol)
-  case pp.to_sym
-  when :http then Net::HTTP
-  when :https then Net::HTTPS
-  else fail 'Peer protocol must be one of :http, :https'
-  end
-end
-
 ## Define a peer node
-def peer(name, protocol = :http, host = 'localhost', client = 2379, peer = 2380)
-  peers[name] = {
-    :client => uri_class(protocol).build(:host => host, :port => client),
-    :peer => uri_class(protocol).build(:host => host, :port => peer)
-  }
+def peer(*args)
+  ETCD::Client.new(*args).tap { |c| peers << c }
 end
 
-## etcd API accessors
-def cluster_client
-  peer = peers.values.firss[:client] ## Connect to a peer's API
-  @etcd_client ||= http_class.new(peer.host, peer.port)
-end
-
-def cluster_members
-  JSON.parse(client.get('/v2/members').body)
-end
-
-def cluster_join
-  client.post('/v2/members', JSON.generate(:peerURLs => advertise_clients))
+def active_peers
+  peers.select(&:online?)
 end
 
 ## Get Chef::Resource for etcd instnace
@@ -127,39 +119,27 @@ def instance_resource
 end
 
 ## Template Helpers
-def advertise_clients
-  (client_host.is_a?(Array) ? client_host : [client_host]).map do |host|
-    (client_port.is_a?(Array) ? client_port : [client_port]).map do |port|
-      uri_class(protocol).build(:host => host, :port => port)
-    end
-  end.flatten
+def client_advertise_urls
+  ETCD::URIBuilder.url(protocol, client_host, client_port)
 end
 
-def listen_clients
-  (client_listen.is_a?(Array) ? client_listen : [client_listen]).map do |host|
-    (client_port.is_a?(Array) ? client_port : [client_port]).map do |port|
-      uri_class(protocol).build(:host => host, :port => port)
-    end
-  end.flatten
+def client_listen_urls
+  ETCD::URIBuilder.url(protocol, client_listen, client_port)
 end
 
-def advertise_peers
-  (peer_host.is_a?(Array) ? peer_host : [peer_host]).map do |host|
-    (peer_port.is_a?(Array) ? peer_port : [peer_port]).map do |port|
-      uri_class(protocol).build(:host => host, :port => port)
-    end
-  end.flatten
+def peer_advertise_urls
+  ETCD::URIBuilder.url(protocol, peer_host, peer_port)
 end
 
-def listen_peers
-  (peer_listen.is_a?(Array) ? peer_listen : [peer_listen]).map do |host|
-    (peer_port.is_a?(Array) ? peer_port : [peer_port]).map do |port|
-      uri_class(protocol).build(:host => host, :port => port)
-    end
-  end.flatten
+def peer_listen_urls
+  ETCD::URIBuilder.url(protocol, peer_listen, peer_port)
 end
 
-def cluster_nodes
-  (advertise_peers.map { |addr| "#{ node_name }=#{ addr }" } +
-   peers.map { |n, peer| "#{ n }=#{ peer[:peer] }" }).sort
+def peer_cluster
+  cluster = peers.map { |peer| "#{ peer.name }=#{ peer.peer_url }" }
+
+  ## Only add our self to the cluster list if we're not a proxy
+  cluster += peer_advertise_urls.map { |url| "#{ node_name }=#{ url }" } if proxy == :off
+
+  cluster.sort
 end

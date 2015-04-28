@@ -1,135 +1,46 @@
 #
-# Cookbook Name:: rapid7-cookbook
+# Cookbook Name:: etcd
 # Library:: etcd_service
 #
+# The MIT License (MIT)
+# =====================
 # Copyright (C) 2015 Rapid7 LLC.
 #
-# All rights reserved - Do Not Redistribute
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is furnished
+# to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 #
 
 ## For the lulz, or tags. Whatever...
 include Opscode::Aws::Ec2
+include ETCD::AWSHelpers
+include ETCD::Helpers
 
 use_inline_resources
-
-## Search for peers via the AWS/EC2 API
-def aws_find_peers
-  new_resource.peers = {} # Empty the peer set
-
-  tags = new_resource.aws_tags.map do |key, value|
-    {
-      :name => "tag:#{ key }",
-      :values => value.is_a?(Array) ? value : [value]
-    }
-  end
-
-  ec2.describe_instances(:filters => tags).data.reservations
-    .map(&:instances).flatten
-    .reject do |instance|
-      instance.instance_id == new_resource.node_name ||
-        instance.private_dns_name.nil? ||
-        instance.private_dns_name.empty?
-    end.each do |instance|
-      Chef::Log.info("etcd_service[#{ new_resource.name }] Found peer #{ instance.instance_id }: "\
-        "#{ new_resource.protocol }://#{ instance.private_dns_name }:#{ new_resource.peer_port }")
-      new_resource.peer(instance.instance_id,
-                        new_resource.protocol,
-                        instance[new_resource.aws_host_attribute],
-                        new_resource.client_port,
-                        new_resource.peer_port)
-    end
-end
 
 action :configure do
   ## Set AWS tags and wait for peers
   if new_resource.discovery == :aws
+    Chef::Log.info("etcd_service[#{ new_resource.name }] Using AWS discovery")
     Chef::Application.fatal!('recipe[aws::default] is required for etcd_service '\
       'AWS cluster discovery!') unless node.run_list.include?('recipe[aws::default]')
 
-    Chef::Log.info("etcd_service[#{ new_resource.name }] Using AWS discovery")
-
-    ## Set node_name to EC2 instance ID
-    Chef::Log.info("etcd_service[#{ new_resource.name }] Setting etcd node_name "\
-      "to #{ node['ec2']['instance_id'] }")
-    new_resource.node_name(node['ec2']['instance_id'])
-    new_resource.client_host(node['ec2']['local_hostname'])
-    new_resource.peer_host(node['ec2']['local_hostname'])
-
-    ## Set our own tags
-    tag_resource = aws_resource_tag(node['ec2']['instance_id'])
-    tag_resource.tags new_resource.aws_tags
-    tag_resource.run_action(:update)
-
-    ## Look for other nodes with the same tags
-    aws_find_peers
-
-    ## Wait for a quorum to become available
-    while new_resource.peers.size < (new_resource.aws_quorum - 1)
-      Chef::Log.info("etcd_service[#{ new_resource.name }] Found "\
-        "#{ new_resource.peers.size }/#{ new_resource.aws_quorum - 1 } AWS peers")
-
-      sleep 5
-      aws_find_peers
-    end
-
-    Chef::Log.info("etcd_service[#{ new_resource.name }] Found "\
-      "#{ new_resource.peers.size } AWS peers. Success!")
-  end
-
-  ## Build etcd arguments
-  etcd_arguments = [
-    "-name #{ new_resource.node_name }",
-    "-data-dir #{ new_resource.data_dir }",
-    "-snapshot-count #{ new_resource.snapshot_count }",
-    "-heartbeat-interval #{ new_resource.heartbeat_interval }",
-    "-election-timeout #{ new_resource.election_timeout }",
-    "-listen-client-urls '#{ new_resource.listen_clients.join(',') }'",
-    "-listen-peer-urls '#{ new_resource.listen_peers.join(',') }'",
-    "-max-snapshots #{ new_resource.max_snapshots }",
-    "-max-wals #{ new_resource.max_wals }",
-    "-initial-advertise-peer-urls '#{ new_resource.advertise_peers.join(',') }'",
-    "-initial-cluster-token '#{ new_resource.token }'",
-    "-advertise-client-urls '#{ new_resource.advertise_clients.join(',') }'",
-    "-proxy '#{ new_resource.proxy }'"
-  ]
-
-  ## Discovery-specific arguments
-  case new_resource.discovery
-  when :static, :aws
-    Chef::Log.info("etcd_service[#{ new_resource.name }] Using static discovery") unless new_resource.discovery == :aws
-    etcd_arguments << "-initial-cluster '#{ new_resource.cluster_nodes.join(',') }'"
-    etcd_arguments << "-initial-cluster-state #{ new_resource.state }"
-  when :etcd
-    Chef::Application.fatal!('Attribte discovery_service is required for :etcd '\
-    'cliuster discovery') if new_resource.discovery_service.nil?
-
-    Chef::Log.info("etcd_service[#{ new_resource.name }] Using etcd discovery")
-    etcd_arguments << "-discovery '#{ new_resource.discovery_service }'"
-    etcd_arguments << "-discovery-fallback #{ new_resource.discovery_fallback }"
-    etcd_arguments << "-discovery-proxy #{ new_resource.discovery_proxy }"
-  when :dns
-    Chef::Application.fatal!('Attribte discovery_domain is required for :dns '\
-    'cliuster discovery') if new_resource.discovery_domain.nil?
-
-    Chef::Log.info("etcd_service[#{ new_resource.name }] Using DNS discovery")
-    etcd_arguments << "-discovery-srv '#{ new_resource.discovery_domain }'"
-    etcd_arguments << "-discovery-fallback #{ new_resource.discovery_fallback }"
-    etcd_arguments << "-initial-cluster-state #{ new_resource.state }"
-  else fail "Discovery method #{ new_resource.discovery } is not supported! "\
-    'Please select one of :static, :etcd, :dns, or :aws'
-  end
-
-  etcd_arguments << "-cors '#{ cors.is_a?(Array) ? cors.join(',') : cors }'" unless new_resource.cors.empty?
-
-  if new_resource.protocol.to_sym == :https
-    etcd_arguments << "-cert-file #{ new_resource.cert_file }"
-    etcd_arguments << "-key-file #{ new_resource.key_file }"
-    etcd_arguments << "-client-cert-auth #{ new_resource.client_cert_auth }"
-    etcd_arguments << "-trusted-ca-file #{ new_resource.trusted_ca_file }"
-    etcd_arguments << "-peer-cert-file #{ new_resource.peer_cert_file }"
-    etcd_arguments << "-peer-key-file #{ new_resource.peer_key_file }"
-    etcd_arguments << "-peer-client-cert-auth #{ new_resource.peer_client_cert_auth }"
-    etcd_arguments << "-peer-trusted-ca-file #{ new_resource.peer_trusted_ca_file }"
+    aws_discovery_bootstrap
+    autoconfigure_node
   end
 
   ## Create service operator
@@ -151,7 +62,7 @@ action :configure do
     backup false
     variables :resource => new_resource,
               :instance => new_resource.instance_resource,
-              :arguments => etcd_arguments
+              :arguments => build_arguments
   end
 
   ## Create the state-store directory

@@ -13,10 +13,10 @@ The `etcd_service` resource allows multiple etcd processes to run on the same sy
 Similarly, the `etcd_binary` and `etcd_source` resources ensure that their respecitve installations are vendored so as to allow mutliple versions/builds of etcd to coexist on a single system. `etcd_service` resources each map to an installation, allowing you to test arbitrary compatability scenarios both within a cluster and with client libraries.
 
 ## Recipes
- * **etcd::aws** Create a simple cluster using the `:aws` discovery method
- * **etcd::default** Install base dependencies. Must be included before using resources.
- * **etcd::node** Create a standalone node
- * **etcd::testing** Create a cluster of three nodes on the same host for testing
+ * **etcd-v2::aws** Create a simple cluster using the `:aws` discovery method
+ * **etcd-v2::default** Install base dependencies. Must be included before using resources.
+ * **etcd-v2::node** Create a standalone node
+ * **etcd-v2::testing** Create a cluster of three nodes on the same host for testing
 
 ## Resources
 ### etcd_binary

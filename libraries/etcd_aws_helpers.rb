@@ -60,8 +60,8 @@ module ETCD
         aws_find_peers
 
         Chef::Log.info("etcd_service[#{ new_resource.name }] Found "\
-          "#{ new_resource.peers.length }/#{ new_resource.quorum - 1 } AWS peers")
-        Chef::Log.info("etcd_service[#{ new_resource.name }] #{ active_peers.length } peers are active")
+          "#{ new_resource.peers.length + 1 }/#{ new_resource.quorum } AWS "\
+          "peers, #{ active_peers.length } active")
 
         break if new_resource.peers.length >= (new_resource.quorum - 1)
         break if active_peers.length > 0

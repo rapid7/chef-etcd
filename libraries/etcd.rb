@@ -42,12 +42,12 @@ class Chef
 
       def version(arg = nil)
         set_or_return(:version, arg, :kind_of => String,
-                                     :default => node['etcd']['version'])
+                                     :default => node['etcd_v2']['version'])
       end
 
       def platform(arg = nil)
         set_or_return(:platform, arg, :kind_of => String,
-                                      :default => node['etcd']['platform'])
+                                      :default => node['etcd_v2']['platform'])
       end
 
       def path(arg = nil)

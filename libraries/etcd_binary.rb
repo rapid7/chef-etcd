@@ -35,7 +35,7 @@ class Chef
       def initialize(name, run_context = nil)
         super
 
-        @provider = Chef::Provider::EtcdBinary
+        @provider = Chef::Provider::EtcdV2Binary
         @resource_name = :etcd_binary
       end
 
@@ -47,7 +47,7 @@ class Chef
 
       def repository(arg = nil)
         set_or_return(:repository, arg, :kind_of => String,
-                                        :default => node['etcd']['bin_repository'])
+                                        :default => node['etcd_v2']['bin_repository'])
       end
 
       def package_cache

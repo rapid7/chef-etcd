@@ -30,11 +30,11 @@ include_attribute 'apt::default'
 default['apt']['compile_time_update'] = true
 
 ## etcd install configuration
-default['etcd']['version'] = 'v2.0.10'
-default['etcd']['platform'] = 'linux-amd64'
-default['etcd']['bin_repository'] = 'coreos/etcd'
-default['etcd']['source_repository'] = 'git@github.com:coreos/etcd.git'
+default['etcd_v2']['version'] = 'v2.0.10'
+default['etcd_v2']['platform'] = 'linux-amd64'
+default['etcd_v2']['bin_repository'] = 'coreos/etcd'
+default['etcd_v2']['source_repository'] = 'git@github.com:coreos/etcd.git'
 
 ## etcd AWS configuration
-default['etcd']['quorum'] = 3
-default['etcd']['aws_cluster'] = 'default'
+default['etcd_v2']['quorum'] = 3
+default['etcd_v2']['aws_cluster'] = 'default'

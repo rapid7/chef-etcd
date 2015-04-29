@@ -1,4 +1,4 @@
-etcd Cookbook
+etcd-v2 Cookbook
 =============
 This cookbook manages [etcd](https://github.com/coreos/etcd) version 2. It provides resources for installation from both binaries and source, and for management of one or more etcd service instnaces.
 
@@ -26,14 +26,14 @@ Install etcd from a compiled release, by default from coreos/etcd on GitHub.
 
 ```
 etcd_binary 'name' do
-  version 'v2.0.10'       # Default set in node['etcd']['version'], currently 'v2.0.10'
-  platform 'linux-amd64'  # Default set in node['etcd']['platform']
+  version 'v2.0.10'       # Default set in node['etcd_v2']['version'], currently 'v2.0.10'
+  platform 'linux-amd64'  # Default set in node['etcd_v2']['platform']
   path '/opt'             # Install root. Unpacked into <path>/etcd-<version>-<platform>
   srv_bin 'etcd'          # Name of etcd binary in package
   ctl_bin 'etcdctl'       # Name of etcd control binary in package
   bin_path '/usr/local/bin' # Path to link to binaries from. Set to nil or false to disable linking
   from :github            # Package source. Currently only :github is supported
-  repository '/coreos/etcd' # GitHub repo to fetch release from. Default node['etcd']['bin_repository']
+  repository '/coreos/etcd' # GitHub repo to fetch release from. Default node['etcd_v2']['bin_repository']
 end
 ```
 
@@ -42,12 +42,12 @@ Fetch and build etcd from a git repository. This resource does not install golan
 
 ```
 etcd_source 'name' do
-  version 'v2.0.10'       # Default set in node['etcd']['version'], currently 'v2.0.10'
+  version 'v2.0.10'       # Default set in node['etcd_v2']['version'], currently 'v2.0.10'
   path '/opt'             # Install root. Unpacked into <path>/etcd-<version>-<platform>-<name>
   srv_bin 'etcd'          # Name of etcd binary
   ctl_bin 'etcdctl'       # Name of etcd control binary
   bin_path '/usr/local/bin' # Path to link to binaries from. Set to nil or false to disable linking
-  repository 'git@github.com:coreos/etcd.git' # Git repo to fetch source from. Default node['etcd']['source_repository']
+  repository 'git@github.com:coreos/etcd.git' # Git repo to fetch source from. Default node['etcd_v2']['source_repository']
 end
 ```
 

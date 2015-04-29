@@ -35,13 +35,13 @@ class Chef
       def initialize(name, run_context = nil)
         super
 
-        @provider = Chef::Provider::EtcdSource
+        @provider = Chef::Provider::EtcdV2Source
         @resource_name = :etcd_source
       end
 
       def url(arg = nil)
         set_or_return(:url, arg, :kind_of => String,
-                                 :default => node['etcd']['source_repository'])
+                                 :default => node['etcd_v2']['source_repository'])
       end
 
       def srv_binary

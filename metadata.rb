@@ -19,7 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-name 'etcd'
+name 'etcd-v2'
 maintainer 'Rapid7 LLC'
 maintainer_email 'coreservices@rapid7.com'
 description 'Install and configure etcd'

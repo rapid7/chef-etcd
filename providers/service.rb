@@ -57,7 +57,7 @@ action :configure do
 
   ## Upstart service config
   template "/etc/init/etcd-#{ new_resource.name }.conf" do
-    cookbook 'etcd'
+    cookbook 'etcd-v2'
     source 'etcd.upstart.erb'
     backup false
     variables :resource => new_resource,

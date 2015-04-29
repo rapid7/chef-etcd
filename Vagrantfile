@@ -51,7 +51,7 @@ Vagrant.configure('2') do |config|
     chef.run_list = [
       'recipe[aws::default]',
       'recipe[aws::ec2_hints]',
-      'recipe[etcd::aws]'
+      'recipe[etcd-v2::aws]'
     ]
   end
 

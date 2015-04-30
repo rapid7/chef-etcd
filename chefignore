@@ -11,6 +11,7 @@ rvm.env
 Gemfile.lock
 woodhouse.pem
 woodhouse.rb
+Thorfile
 
 # OS generated files #
 ######################

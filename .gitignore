@@ -14,8 +14,10 @@ Berksfile.lock
 
 # Bundler
 bin/*
-.bundle/*
+.bundle
+.temp
 
+.DS_Store
 VERSION
 credentials.json
 metadata.json

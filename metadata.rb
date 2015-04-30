@@ -24,7 +24,7 @@ maintainer 'Rapid7 LLC'
 maintainer_email 'coreservices@rapid7.com'
 description 'Install and configure etcd'
 
-license IO.read('LICENSE') rescue 'All rights reserved'
+license 'MIT'
 long_description IO.read('README.md') rescue ''
 version IO.read('VERSION') rescue '0.0.1'
 

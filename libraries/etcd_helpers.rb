@@ -43,8 +43,8 @@ module ETCD
 
       Chef::Log.info("etcd_service[#{ new_resource.name }] Active cluster has "\
         "#{ cluster_member_urls.length } members #{ cluster_member_urls.join(',') } ")
-      Chef::Log.info("etcd_service[#{ new_resource.name }] This node advertises "\
-        "#{ new_resource.peer_advertise_urls.join(',') }")
+      Chef::Log.info("etcd_service[#{ new_resource.name }] This node advertises " +
+        new_resource.peer_advertise_urls.join(','))
 
       ## Do we need to join?
       my_registered_urls = (cluster_member_urls & new_resource.peer_advertise_urls.map(&:to_s))

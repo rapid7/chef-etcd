@@ -26,8 +26,14 @@
 #
 
 ## For the lulz, or tags. Whatever...
-include Opscode::Aws::Ec2
-include ETCD::AWSHelpers
+begin
+  include Opscode::Aws::Ec2
+  include ETCD::AWSHelpers
+rescue NameError
+  Chef::Log.warn('The `aws` cookbook has not been loaded. AWS cluster discovery '\
+    'is not available!')
+end
+
 include ETCD::Helpers
 
 use_inline_resources

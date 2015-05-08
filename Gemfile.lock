@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/jmanero/chef_life.git
-  revision: 8b6f595076b3eed1897db10802dfee8995178906
+  revision: 8c3b37afb9438d6feba7fef96e3c710af9f0843a
   specs:
     chef_life (0.0.1)
       aws-sdk (~> 2.0)
@@ -13,14 +13,14 @@ GEM
   remote: https://rubygems.org/
   specs:
     addressable (2.3.8)
-    aws-sdk (2.0.41)
-      aws-sdk-resources (= 2.0.41)
-    aws-sdk-core (2.0.41)
+    aws-sdk (2.0.42)
+      aws-sdk-resources (= 2.0.42)
+    aws-sdk-core (2.0.42)
       builder (~> 3.0)
       jmespath (~> 1.0)
       multi_json (~> 1.0)
-    aws-sdk-resources (2.0.41)
-      aws-sdk-core (= 2.0.41)
+    aws-sdk-resources (2.0.42)
+      aws-sdk-core (= 2.0.42)
     berkshelf (3.2.4)
       addressable (~> 2.3.4)
       berkshelf-api-client (~> 1.2)
@@ -143,7 +143,7 @@ GEM
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
-    rack (1.6.0)
+    rack (1.6.1)
     rake (10.4.2)
     retryable (2.0.1)
     ridley (4.1.2)
@@ -179,23 +179,23 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.2.0)
     rspec-support (3.2.2)
-    rspec_junit_formatter (0.2.1)
+    rspec_junit_formatter (0.2.2)
       builder (< 4)
       rspec-core (>= 2, < 4, != 2.12.0)
     sawyer (0.6.0)
       addressable (~> 2.3.5)
       faraday (~> 0.8, < 0.10)
     semverse (1.2.1)
-    serverspec (2.14.1)
+    serverspec (2.16.0)
       multi_json
       rspec (~> 3.0)
       rspec-its
-      specinfra (~> 2.25)
+      specinfra (~> 2.31)
     slop (3.6.0)
     solve (1.2.1)
       dep_selector (~> 1.0)
       semverse (~> 1.1)
-    specinfra (2.30.3)
+    specinfra (2.31.0)
       net-scp
       net-ssh
     systemu (2.6.5)

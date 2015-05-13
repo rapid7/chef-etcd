@@ -28,6 +28,8 @@ license 'MIT'
 long_description IO.read('README.md') rescue ''
 version IO.read('VERSION') rescue '0.0.1'
 
+supports 'ubuntu'
+
 depends 'apt'
 depends 'libarchive', '>= 0.5.0'
 

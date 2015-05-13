@@ -63,7 +63,6 @@ class Chef
 
       def service_action(arg = nil)
         set_or_return(:service_action, arg, :kind_of => [Symbol, Array],
-                                            :equal_to => [:enable, :start, :stop, :disable],
                                             :default => [:start, :enable])
       end
 

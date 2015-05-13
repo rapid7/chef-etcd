@@ -2,5 +2,4 @@
 
 require 'bundler'
 require 'bundler/setup'
-require 'thor/scmversion'
 require 'chef_life'

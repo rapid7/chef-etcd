@@ -243,7 +243,7 @@ class Chef
         peers.select(&:online?)
       end
 
-      ## Get Chef::Resource for etcd instnace
+      ## Get Chef::Resource for etcd instance
       def instance_resource
         instance.is_a?(Resource::Etcd) ? instance : resources(instance)
       end
@@ -271,7 +271,8 @@ class Chef
         ## Only add our self to the cluster list if we're not a proxy
         cluster += peer_advertise_urls.map { |url| "#{ node_name }=#{ url }" } if proxy == :off
 
-        cluster.sort
+        ## Remove possible duplicates after adding self to the cluster, and return it sorted.
+        cluster.uniq.sort
       end
     end
   end

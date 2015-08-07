@@ -32,12 +32,9 @@ start() {
   touch $pidfile
 
   # Start daemon.
-  daemon \
-    --pidfile=$pidfile \
-    "{ /usr/local/bin/etcd \
-      <%= @arguments.join("\\\n  ") %> \
-      > $STDOUT 2> $STDERR &
-    }; echo \$! >| $pidfile" && success || failure
+  $etcd <%= @arguments.join("\\\n  ") %> > $STDOUT 2> $STDERR &
+  echo $! >| $pidfile
+  status_log=$(status -p $pidfile $prog) && success || failure
 
   RETVAL=$?
   [ $RETVAL -eq 0 ] && touch $lockfile
@@ -47,7 +44,7 @@ start() {
 stop() {
   status_log=$(status -p $pidfile $prog)
   RETVAL=$?
-  if [ $RETVAL -ne 0 ]; then
+  if [ $RETVAL -eq 3 ]; then
     echo $status_log
     return
   fi

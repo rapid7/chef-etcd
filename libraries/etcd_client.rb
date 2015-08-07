@@ -44,7 +44,7 @@ module ETCD
 
         hosts.map { |host| ports.map do |port|
           uri_class(protocol).build(:host => host, :port => port)
-        end }.flatten.sort
+        end }.flatten.sort_by {|uri| uri.to_s}
       end
 
       ## Return the correct URI class for a given protocol scheme

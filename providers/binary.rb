@@ -34,10 +34,28 @@ action :install do
     only_if { new_resource.from.to_sym == :github }
   end
 
+  ## Create service operator
+  group new_resource.group do
+    system true
+  end
+
+  user new_resource.user do
+    home '/usr/local/bin'
+    shell '/usr/sbin/nologin'
+    group new_resource.group
+    system true
+  end
+
   libarchive_file "etcd-#{ new_resource.name }-temp-package" do
     path new_resource.package_cache
     extract_to new_resource.path
     extract_options [:no_overwrite]
+  end
+
+  directory new_resource.cannonical_path do
+    user new_resource.user
+    group new_resource.group
+    recursive true
   end
 
   ## Link executables to someplace in PATH

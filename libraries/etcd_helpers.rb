@@ -80,11 +80,11 @@ module ETCD
         if new_resource.protocol.to_sym == :https
           etcd_arguments << "-cert-file #{ new_resource.cert_file }"
           etcd_arguments << "-key-file #{ new_resource.key_file }"
-          etcd_arguments << "-client-cert-auth #{ new_resource.client_cert_auth }"
+          etcd_arguments << "-client-cert-auth" if new_resource.client_cert_auth
           etcd_arguments << "-trusted-ca-file #{ new_resource.trusted_ca_file }"
           etcd_arguments << "-peer-cert-file #{ new_resource.peer_cert_file }"
           etcd_arguments << "-peer-key-file #{ new_resource.peer_key_file }"
-          etcd_arguments << "-peer-client-cert-auth #{ new_resource.peer_client_cert_auth }"
+          etcd_arguments << "-peer-client-cert-auth" if new_resource.peer_client_cert_auth
           etcd_arguments << "-peer-trusted-ca-file #{ new_resource.peer_trusted_ca_file }"
         end
 
@@ -102,7 +102,7 @@ module ETCD
           Chef::Log.info("etcd_service[#{ new_resource.name }] Using etcd discovery")
           etcd_arguments << "-discovery '#{ new_resource.discovery_service }'"
           etcd_arguments << "-discovery-fallback #{ new_resource.discovery_fallback }"
-          etcd_arguments << "-discovery-proxy #{ new_resource.discovery_proxy }"
+          etcd_arguments << "-discovery-proxy #{ new_resource.discovery_proxy }" if new_resource.discovery_proxy
 
         when :dns
           Chef::Application.fatal!('Attribte discovery_domain is required for :dns '\

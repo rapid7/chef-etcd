@@ -1,0 +1,87 @@
+#!/bin/bash
+#
+# etcd      This shell script takes care of starting and stopping etcd
+#
+# chkconfig: 345 80 30
+# description:  etcd service registry
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+RETVAL=0
+
+prog=`basename $0`
+etcd=/usr/local/bin/etcd
+
+lockfile=/var/lock/subsys/$prog
+pidfile=/var/run/$prog.pid
+
+STDOUT=/var/log/$prog.log
+STDERR=/var/log/$prog.err
+STOP_TIMEOUT=${STOP_TIMEOUT-10}
+
+start() {
+  status_log=$(status -p $pidfile $prog)
+  RETVAL=$?
+  if [ $RETVAL -eq 0 ]; then
+    echo $status_log
+    return
+  fi
+
+  echo -n "Starting $prog:"
+  touch $pidfile
+
+  # Start daemon.
+  $etcd <%= @arguments.join("\\\n  ") %> > $STDOUT 2> $STDERR &
+  echo $! >| $pidfile
+  status_log=$(status -p $pidfile $prog) && success || failure
+
+  RETVAL=$?
+  [ $RETVAL -eq 0 ] && touch $lockfile
+  echo
+}
+
+stop() {
+  status_log=$(status -p $pidfile $prog)
+  RETVAL=$?
+  if [ $RETVAL -eq 3 ]; then
+    echo $status_log
+    return
+  fi
+
+  echo -n $"Stopping $prog: "
+
+  # Stop daemon.
+  killproc -p ${pidfile} -d ${STOP_TIMEOUT} $etcd && success || failure
+  RETVAL=$?
+  echo
+  [ $RETVAL -eq 0 ] && rm -f $pidfile $lockfile
+}
+
+restart() {
+  stop
+  sleep 1
+  start
+  RETVAL=$?
+}
+
+# See how we were called.
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    restart
+    ;;
+  status)
+    status -p $pidfile $prog
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop|restart|status}"
+    exit 1
+esac
+
+exit $RETVAL

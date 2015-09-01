@@ -69,6 +69,17 @@ action :configure do
     variables :resource => new_resource,
               :instance => new_resource.instance_resource,
               :arguments => build_arguments
+    only_if { node['platform_family'] == 'debian' }
+  end
+
+  # Init.d service config
+  template "/etc/init.d/etcd-#{new_resource.name}" do
+    cookbook 'etcd-v2'
+    source 'etcd.initd.erb'
+    backup false
+    mode 0755
+    variables :arguments => build_arguments
+    only_if { node['platform_family'] == 'rhel' }
   end
 
   ## Create the state-store directory
@@ -83,6 +94,7 @@ action :configure do
     supports :restart => true, :status => true
     action new_resource.service_action
 
-    provider Chef::Provider::Service::Upstart
+    provider Chef::Provider::Service::Upstart if node['platform_family'] == 'debian'
+    provider Chef::Provider::Service::Init::Redhat if node['platform_family'] == 'rhel'
   end
 end

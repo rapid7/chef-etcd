@@ -46,8 +46,15 @@ etcd_service 'node1' do
   peer_host 'localhost'
   peer_port 2382
 
-  peer 'node0', :http, 'localhost', 2379, 2380
-  peer 'node2', :http, 'localhost', 2383, 2384
+  peer 'node0', 'localhost',
+       :protocol => :http,
+       :client_port => 2379,
+       :peer_port => 2380
+
+  peer 'node2', 'localhost',
+       :protocol => :http,
+       :client_port => 2383,
+       :peer_port => 2384
 
   data_dir '/var/data/etcd-node1'
 end

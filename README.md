@@ -1,6 +1,6 @@
 etcd-v2 Cookbook
 =============
-This cookbook manages [etcd](https://github.com/coreos/etcd) version 2. It provides resources for installation from both binaries and source, and for management of one or more etcd service instnaces.
+This cookbook manages [etcd](https://github.com/coreos/etcd) version 2. It provides resources for installation from both binaries and source, and for management of one or more etcd service instances.
 
 ## What even is all of this for?!
 This cookbook aims to provide a feature complete utility to install and configure one or more instances of etcd for both production and development/testing proposes.
@@ -10,7 +10,7 @@ The `etcd_service` resource allows multiple etcd processes to run on the same sy
  * Test discovery configurations and failovers _before_ doing it live.
  * Figure out how to actually add/remove nodes to/from your cluster safely before you [do this](https://twitter.com/honest_update/status/591293366245163008).
 
-Similarly, the `etcd_binary` and `etcd_source` resources ensure that their respecitve installations are vendored so as to allow mutliple versions/builds of etcd to coexist on a single system. `etcd_service` resources each map to an installation, allowing you to test arbitrary compatability scenarios both within a cluster and with client libraries.
+Similarly, the `etcd_binary` and `etcd_source` resources ensure that their respective installations are vendored so as to allow multiple versions/builds of etcd to coexist on a single system. `etcd_service` resources each map to an installation, allowing you to test arbitrary compatibility scenarios both within a cluster and with client libraries.
 
 ## Recipes
  * **etcd-v2::aws** Create a simple cluster using the `:aws` discovery method
@@ -56,7 +56,7 @@ Configure and run an installation (`etcd_binary` or `etcd_source`) as a service.
 
 While most configuration parameters are exposed directly, several abstractions are provided to capture some of the more confusing or repetitive parts of the etcd v2 configuration spec:
 
-**`client_port`, `peer_port`, `client_listen`, `peer_listen`, `client_host`, and `peer_host`** attributes are used to simplify the composition of various `*-url` arguments. Arrays passed to these attributes will result in geometric compositions, including the `protocol` arrtibute in the respective argument:
+**`client_port`, `peer_port`, `client_listen`, `peer_listen`, `client_host`, and `peer_host`** attributes are used to simplify the composition of various `*-url` arguments. Arrays passed to these attributes will result in geometric compositions, including the `protocol` attribute in the respective argument:
 
 ```
 -advertise-client-urls\
@@ -68,7 +68,7 @@ While most configuration parameters are exposed directly, several abstractions a
 
 **Static peers** are added using the **`peer(name, protocol, host, client_port, peer_port)`** method. The node's `-initial-cluster` argument will be composed from a merge of `protocol`, `host`, and `peer_port` parameters as well as the nodes own 'peer_host:peer_port' set.
 
-**The `discovery` attribute** enables different configuration arguments specific to the respecive clustering method. `:static`, `:etcd`, and `:dns` are features of etcd. The `:aws` discovery method is implemented by this cookbook. It uses the EC2 tags API to find peers for cluster bootstrapping.
+**The `discovery` attribute** enables different configuration arguments specific to the respective clustering method. `:static`, `:etcd`, and `:dns` are features of etcd. The `:aws` discovery method is implemented by this cookbook. It uses the EC2 tags API to find peers for cluster bootstrapping.
 
 ```
 etcd_service 'node_name' do
@@ -82,7 +82,7 @@ etcd_service 'node_name' do
   user 'etcd'
   group 'etcd'
 
-  ## Passed to unterlying `service` resource
+  ## Passed to underlying `service` resource
   service_action [:start, :enable]
 
   ## Node configuration/tuning
@@ -102,7 +102,7 @@ etcd_service 'node_name' do
   election_timeout 1000
 
   cors 'allowed.domain.com' # CORS origins allowed by client API (String, Array).
-  proxy :off              # One of :on, :readonly, :off. See https://github.com/coreos/etcd/blob/master/Documentation/proxy.md
+  proxy :off                # One of :on, :readonly, :off. See https://github.com/coreos/etcd/blob/master/Documentation/proxy.md
 
   ## SSL
   protocol :http          # Transport protocol. One of :http, :https. Default :http
@@ -124,18 +124,22 @@ etcd_service 'node_name' do
   token 'etcd-cluster'    # initial-cluster-token: Default 'etcd-cluster'
 
   ## Define a peer node for :static configuration.
-  peer 'node1', :http, 'localhost', 2381, 2382
+  peer 'node1', 'localhost',
+       :protocol => :http,
+       :client_port => 2381,
+       :peer_port => 2382,
+       :timeout => 10
 
   discovery_service 'https://discovery.etcd.io/blahblahblah' # An etcd discovery node
-  discovery_proxy 'proxy.domain.com' # HTTP(S) Proxy to etcd discovery servuce
-  discovery_domain 'domain.com' # Domain inwhich to query DNS SRV record etcd-server[-ssl]._tcp.domain.com
+  discovery_proxy 'proxy.domain.com' # HTTP(S) Proxy to etcd discovery service
+  discovery_domain 'domain.com' # Domain in which to query DNS SRV record etcd-server[-ssl]._tcp.domain.com
   discovery_fallback :exit # One of :exit, :proxy. See https://github.com/coreos/etcd/blob/master/Documentation/proxy.md
 
   ## AWS Discovery parameters
   aws_tags :service => 'foo', :cluster => 'production' # Tags used to discover peers
   aws_host_attribute :private_dns_name # AWS-SDK Instance key to be used as hostnames See [The Docs](http://docs.aws.amazon.com/sdkforruby/api/Aws/EC2/Instance.html)
 
-  ## AWS key attributes are provided for compatability with the Opscode AWS cookbook;
+  ## AWS key attributes are provided for compatibility with the Opscode AWS cookbook;
   ## however, **you should be using IAM instance profiles ಠ_ಠ**
   aws_access_key ''
   aws_secret_access_key ''
@@ -143,7 +147,7 @@ end
 ```
 
 ### Using the :aws discovery method
-The `:aws` discovery method uses AWS tags and etcd APIs to bootstrap a new cluster, join an exizting cluster, or fail back to a proxy node if a cluster of the desired size exists.
+The `:aws` discovery method uses AWS tags and etcd APIs to bootstrap a new cluster, join an existing cluster, or fail back to a proxy node if a cluster of the desired size exists.
 
  * The `:aws` discovery method requires the `aws` cookbook. You must add it to your downstream dependencies and include the `aws::default` recipe before defining resources that use the `:aws` discovery method! The `aws::ec2_hints` recipe may be necessary to coerce ohai into populating `node['ec2']`
  * `node_name` will be set to `node['ec2']['instance_id']`. The same transport `protocol` and `peer_port` must be used across the cluster.

@@ -27,7 +27,7 @@ source_url 'https://github.com/rapid7/chef-etcd'
 
 license 'MIT'
 long_description IO.read('README.md') rescue ''
-version '1.0.10'
+version '1.0.6'
 
 supports 'ubuntu'
 supports 'centos'

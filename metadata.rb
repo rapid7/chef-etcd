@@ -23,6 +23,7 @@ name 'etcd-v2'
 maintainer 'Rapid7 LLC'
 maintainer_email 'coreservices@rapid7.com'
 description 'Install and configure etcd'
+source_url 'https://github.com/rapid7/chef-etcd'
 
 license 'MIT'
 long_description IO.read('README.md') rescue ''

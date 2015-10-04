@@ -50,6 +50,14 @@ class Chef
                                         :default => node['etcd_v2']['bin_repository'])
       end
 
+      def user(arg = nil)
+        set_or_return(:user, arg, :kind_of => String, :default => 'etcd')
+      end
+
+      def group(arg = nil)
+        set_or_return(:group, arg, :kind_of => String, :default => 'etcd')
+      end
+
       def package_cache
         ::File.join(Chef::Config[:file_cache_path], "#{ package_name }-#{ name }.tgz")
       end
